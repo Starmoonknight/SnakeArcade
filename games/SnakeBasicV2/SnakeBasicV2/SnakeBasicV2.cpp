@@ -232,9 +232,18 @@ void RenderGameGrid(GameBoard& board, const std::deque<Vec2>& snakeBody, const G
     system("cls");
     std::cout << "\n";
 
-    std::vector<bool> occupied(cfg.width * cfg.height, false);
+    std::vector<char> grid(cfg.width * cfg.height, cfg.emptyCell); 
 
-    auto idx
+    board.Clear(cfg.emptyCell);
+
+    for (const Vec2& seg : snakeBody)
+    {
+        if (board.InBounds(seg))
+        {
+            board.
+        }
+    }
+
 
         for (int y = 0; y < cfg.height; ++y)
         {
