@@ -3,6 +3,15 @@
 
 
 
+/*      Reflection 
+*   
+* 
+*/
+
+
+
+
+
 // NOTES: 
 // - static_cast    
 //          Makes conversions explicit (often to satisfy APIs / silence warnings): “convert expr to type T using normal, compile-time rules.”. 
@@ -27,6 +36,12 @@
 //          Writing  std::cout.write(prompt.data(), static_cast<std::streamsize>(prompt.size()));  is the same as std::cout << prompt; but using .write(data, size) is just a very explicit “print exactly N chars” approach.
 //
 // - (void) before the function call ignores the return value.
+//
+// - [[nodiscard]] 
+//          Used in a method where I made a copy from a input parameter to return a new parameteer back thet did not modify the two provided ones.
+//          Did this since the method was suposed to return a new value anyways so could have made refA and refB equalls a new varC,
+//          but instead directly made a copyA instead of taking in a refA and returned that copyA. 
+//          [[nodiscard]] since 'Vec2 a' is a copy that is modified and then returnerd as a new value instead  of modifieng a ref directly 
 
 
 
