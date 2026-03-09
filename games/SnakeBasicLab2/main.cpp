@@ -1,78 +1,21 @@
-// SnakeBasicV2.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// SnakeBasicLab2.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 
-
-/*      Reflection 
-*   Choose to go with using the clamp bounds method for now while keeping the wrap version for later testing. 
-*   Going for a game mode where the game ends if the snake touches a wall, since that's how I remember the first version of snake I played to work like that. 
-*   
-*   I worked a bit on the Vec2 struct and took a first look at operator methods that define what the sign signs: +, -, =, +=, -=, ==, !=, will do when used with it.
-*   Used Vec2 as coordinates to paint the grid on and by converting using the Index() method store those coords in a 1D list / vector that gets updated information
-*   each game loop, that is then used to print an updated grid with the current correct snake position and and eventual game map changes. 
-*   Next step is adding in fruits for score and snake growth. 
-* 
-*   No bigger bug but it took time to learn what each new word did in c++ did. 
-*   - Fixed an infinite loop / stuck-in-play issue by restructuring the Playing state to call RunPlayLoop once and return to menu cleanly,
-*     that was created when moving out the code from the switch case into RunPlayLoop().
-*   - Fixed a compiler error about default arguments specified multiple times, more info below.
-*   - Fixed some input bugs where the input could never be accepted
-*   - And fixed another input bug where a string was trimmed of blank spaces but the trimed version was not used because I assumed I was doing a ref change and forgot I made a new object. 
-* 
-*   The order of declaration often snuck up as a hidden error when I added new methods before others, and then inside tried to use these other methods that were declared later in the document
-*   Ended up making a Forward declarations / Table of contents section that included every method, but will revisit this part soon and look over what needs to be there and what did not fir in. 
-*   Still looking at how free functions need declaration before used while functions inside a struct or class (member function?) can call each other regardless of order
-*   Had a build problem and I learned default arguments should only be specified once (usually in the declaration) while trying to figure out the compiler error when I had repeated them.
-* 
-*   Also ended up spending some time on the const / ref / temp var options for when I should avoid copies and when they did not matter as much. 
-*   Smaller data like char or int might not need a ref and are better to pass by value since you don't gain anything by making a ref there.
-*   Bigger structs or strings are better to send by ref const& unless there is a reason for needing a new copy, and I found a string_view that might be better to use than just sending
-*   a string when only using as a readonly. Though that led me on a side path of how some .Length and .Size uses size_t an unsigned value, 
-*   so needed to  static_cast<> to avoid compiler warnings with my warning level W4
-* 
+/*      Reflection
+*
+*
 */
 
 
 
 
 
-// NOTES: 
-// - static_cast    
-//          Makes conversions explicit (often to satisfy APIs / silence warnings): “convert expr to type T using normal, compile-time rules.”. 
-//          But also for correctness case when casting since it will not silently cast away const? Importent with <cctype> functions: std::isspace, std::toupper, etc. 
-//          Values representable as unsigned char. If char is signed on a platform and has a negative value (common for non-ASCII bytes), calling isspace(ch) can be undefined behavior.
-// 
-// - const          
-//          In params: prevents modifying that parameter (esp. const& = read-only view of caller's object).
-//          Can also be put after a method, trailing const on after a member fn: promises it won’t modify *this*; inside, 'this' is treated as pointer-to-const (can call only const members) ? 
-//          Example: Treating GameBoard as a const GameBoard in .Get  
-// 
-// - &               
-//          Reference: aliases an existing object (no copy). In params, T& lets you modify caller; const T& reads without copying.
-//
-// - string_view    
-//          string_view is C++17+, but some interactions (cout << view, string += view) are C++20/library-dependent;
-//          - std::cout << std::string_view and std::string += std::string_view may not work in C++17,
-//          use .write() / .append(data,size) to stay compatible with C++17 builds.
-// 
-// - static_cast<std::streamsize>
-//          Using the static_cast<std::streamsize> is because .size() is size_t (unsigned) and write() expects std::streamsize (signed), so this avoids warnings / matches the API type.
-//          Writing  std::cout.write(prompt.data(), static_cast<std::streamsize>(prompt.size()));  is the same as std::cout << prompt; but using .write(data, size) is just a very explicit “print exactly N chars” approach.
-//
-// - (void) before the function call ignores the return value.
-//
-// - [[nodiscard]] 
-//          Catches mistakes where a value is computed and then discarded when creating a new value to returnn instead of directly modifying a value from a ref. 
-//          It gives a warning if something calls a function that has [[nodiscard]] and throws away the return value since ignoring it is probably a bug or a mistake.
-//
-
-
-
-
 // -------------------- Includes --------------------
 
+#include <cstdlib>      // std::system
 #include <iostream>
-#include <deque>
+#include <deque>        
 #include <vector>
 #include <algorithm>
 #include <limits>
@@ -103,85 +46,14 @@ struct GameConfig
     char apple{ '?' };
 };
 
-struct Vec2
-{
-    int x{};
-    int y{};
-};
 
-// allow the value of a Vec2 to be added to another Vec2, just like an 'int a += int b'
-inline Vec2& operator+=(Vec2& a, const Vec2& b)
-{
-    a.x += b.x;
-    a.y += b.y;
-    return a;
-}
-
-// create a new Vec2 from two provided Vec2's, just like an 'int a + int b' 
-[[nodiscard]] inline Vec2 operator+(Vec2 a, const Vec2& b)
-{
-    // a is a copy of the left operand, modify the copy with += and then return the copy    (return a new value without changing the originals.)
-    a += b;
-    return a;
-}
-
-// allow the value of a Vec2 to be removed from another Vec2, just like an 'int a -= int b'
-inline Vec2& operator-=(Vec2& a, const Vec2& b)
-{
-    a.x -= b.x;
-    a.y -= b.y;
-    return a;
-}
-
-// create a new Vec2 from two provided Vec2's, just like an 'int a - int b' 
-[[nodiscard]] inline Vec2 operator-(Vec2 a, const Vec2& b)                      // [[nodiscard]] since 'Vec2 a' is a copy that is modified and then returnerd as a new value instead  of modifieng a ref directly  
-{
-    a -= b;                                                                     // -= modifies and returns 'Vec2 a', this works becase 'Vec2 a' is a new copy made here
-    return a;
-}
-
-// allow comparison checks for Vec2, just like if( int a == int b )
-inline bool operator==(const Vec2& a, const Vec2& b)
-{
-    return a.x == b.x && a.y == b.y;
-}
-
-// allow comparison checks for Vec2, just like if( int a != int b )
-inline bool operator!=(const Vec2& a, const Vec2& b)
-{
-    return !(a == b);
-}
-
-enum class Direction { STOP, Up, Down, Left, Right }; // strong typed enums? Look up more later
-
-struct Snake
-{
-    std::deque<Vec2> segments{};
-    Direction dir = Direction::Up;
-
-    bool Empty() const { return segments.empty(); }
-    std::size_t Leangth() const { return segments.size(); }
-
-    const Vec2& Head() const { return segments.front(); }
-    const Vec2& Tail() const { return segments.back(); }
-
-    void ResetTo(const Vec2& startPos, Direction startDir = Direction::Up)
-    {
-        segments.clear();
-        segments.push_front(startPos);
-        dir = startDir; 
-    }
-
-    void AddHead(const Vec2& p) { segments.push_front(p); }
-    void RemoveTail() { segments.pop_back(); }
-};
 
 struct GameGrid
 {
     int width{};
     int height{};
     char empty{};
-    Vec2 fruitCoord{}; 
+    Vec2 fruitCoord{};
     std::vector<char> grid;
 
     GameGrid() = default;
@@ -204,7 +76,7 @@ struct GameGrid
     // checks against current board limits
     bool InBounds(const Vec2& pos) const
     {
-        return (pos.x >= 0 && pos.x < width) 
+        return (pos.x >= 0 && pos.x < width)
             && (pos.y >= 0 && pos.y < height);
     }
 
@@ -298,7 +170,7 @@ std::string_view TrimLeftWS(std::string_view s)
     while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i])))
         ++i;
 
-    return s.substr(i); 
+    return s.substr(i);
 }
 
 // turns "1234" into "1 / 2 / 3 / 4"   (or could be "1, 2, 3, 4" if separator like ", " is provided)
@@ -350,14 +222,14 @@ void PrintPrompt(std::string_view prompt)
 std::string ReadLine()
 {
     std::string line;
-    std::getline(std::cin, line); 
-    return line; 
+    std::getline(std::cin, line);
+    return line;
 }
 
 std::string ReadLine(std::string_view prompt)       // split the original into PrintPrompt / ReadLine since prints + reads are tow things, but kept this wrapper for cleaner call sites 
 {
     PrintPrompt(prompt);
-    return ReadLine(); 
+    return ReadLine();
 }
 
 char ReadCharChoice(std::string_view prompt, std::string_view allowedChar)
@@ -367,7 +239,7 @@ char ReadCharChoice(std::string_view prompt, std::string_view allowedChar)
     while (true)
     {
         std::string line = ReadLine();
-        std::string_view stringView = TrimLeftWS(line); 
+        std::string_view stringView = TrimLeftWS(line);
 
         /*
         if (!ValidateFirstCharInSet(stringView, allowedChar))
@@ -381,7 +253,7 @@ char ReadCharChoice(std::string_view prompt, std::string_view allowedChar)
 
             // If char is signed on your platform (common), and the byte value is >= 128, it can become negative and calling tolower(negative) is undefined behavior.
             return static_cast<char>(std::tolower(uch)); // invalid input message + retry
-        }        
+        }
     }
 
     // if no while loop could do:
@@ -422,7 +294,7 @@ void ClampPosition(const GameGrid& grid, Vec2& pos)
 void WrapPosition(const GameGrid& grid, Vec2& pos)
 {
 
-    if (pos.x < 0) pos.x = grid.width -1;
+    if (pos.x < 0) pos.x = grid.width - 1;
     if (pos.x >= grid.width) pos.x = 0;
     if (pos.y < 0) pos.y = grid.height - 1;
     if (pos.y >= grid.height) pos.y = 0;
@@ -438,7 +310,7 @@ void PressEnterPrompt()
 
 void RenderMainMenu()
 {
-    system("cls");
+    std::system("cls");
     std::cout << "\n=== SNAKE MAIN MENU ===\n";
     std::cout << "1) Play" << std::endl;
     std::cout << "2) Controls / Help\n";
@@ -449,7 +321,7 @@ void RenderMainMenu()
 
 void RenderHelpMenu()
 {
-    system("cls");
+    std::system("cls");
     std::cout << "\n--- Controls / Help ---\n";
     std::cout << "Player move with w/a/s/d\n ";
     std::cout << "In game press q to return to menu\n ";
@@ -462,7 +334,7 @@ void RenderHelpMenu()
 
 void RenderScoreBoard(const int& bestScore)
 {
-    system("cls");
+    std::system("cls");
     std::cout << "\n--- Leaderboard ---\n";
     std::cout << "\nBest score: " << bestScore << "\n";
     PressEnterPrompt();
@@ -486,13 +358,13 @@ void RenderGrid(const GameGrid& grid, char gridBoarder)       // char gridBoarde
             std::cout << grid.Get(x, y) << ' ';
         }
         std::cout << gridBoarder << ' ';            // right row rim 
-        std::cout << '\n'; 
+        std::cout << '\n';
     }
 
     for (int x = 0; x < grid.width + 2; ++x)   // bottom row rim
         std::cout << gridBoarder << ' ';
 
-    std::cout << '\n'; 
+    std::cout << '\n';
 }
 
 
@@ -508,7 +380,7 @@ void PaintSnake(GameGrid& grid, const GameConfig& cfg, const Snake& snake)
             continue;
 
         grid.Set(coord.x, coord.y, isHead ? cfg.snakeHead : cfg.snakeBody);
-        isHead = false; 
+        isHead = false;
     }
 }
 
@@ -538,14 +410,14 @@ void StepSnake(const GameGrid& grid, Snake& snake, bool growThisTurn)
     Vec2 nextPos = headpos + Delta(snake.dir);
     ClampPosition(grid, nextPos);       // change to GameOver in next step 
 
-    if (nextPos == headpos)             
-        return; 
+    if (nextPos == headpos)
+        return;
 
     // Also add body hit check at next step
     // Also add fruit hit check at next step
 
     snake.AddHead(nextPos);
-    if(!growThisTurn)
+    if (!growThisTurn)
         snake.RemoveTail();
 }
 
@@ -553,17 +425,17 @@ void RunPlayLoop(const GameConfig& cfg, Snake& snake, int& score)
 {
     GameGrid grid{ cfg };
 
-    const Vec2 startPos{ ((cfg.width / 2) - 1),((cfg.height / 2) - 1) };  
+    const Vec2 startPos{ ((cfg.width / 2) - 1),((cfg.height / 2) - 1) };
     snake.segments.clear();
     snake.segments.push_front(startPos);
-    
+
     bool playing = true;
     while (playing)
     {
         // RENDER
-        grid.ClearGrid(); 
+        grid.ClearGrid();
         PaintSnake(grid, cfg, snake);
-        RenderGrid(grid, cfg.gridBoarder); 
+        RenderGrid(grid, cfg.gridBoarder);
 
         // READ
         char cmd = ReadCharChoice("Move (W/A/S/D), menu (Q): ", "wasdq");
@@ -575,7 +447,7 @@ void RunPlayLoop(const GameConfig& cfg, Snake& snake, int& score)
             continue;
         }
 
-        UpdateSnakeDirFromInput(snake, cmd); 
+        UpdateSnakeDirFromInput(snake, cmd);
         StepSnake(grid, snake /* growThisTurn = false */);
         // update score at each succefull movement in next step / when fruit exists change to that 
     }
@@ -611,7 +483,7 @@ int main()
             std::string choiceStr;
             std::getline(std::cin, choiceStr);
 
-            std::string_view stringView = TrimLeftWS(choiceStr); 
+            std::string_view stringView = TrimLeftWS(choiceStr);
             if (!ValidateCharOrPrintCustomMsg(stringView, "1234", "Please enter a valid value number between 1-4\n"))
                 continue;
 
