@@ -127,12 +127,15 @@
   <ItemGroup>
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameGrid.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Snake.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Direction.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameGrid.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="Snake.h" />
     <ClInclude Include="Vec2.h" />
   </ItemGroup>
