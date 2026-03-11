@@ -8,6 +8,21 @@
 */
 
 
+//  NOTES:
+//
+// - Decleration Order     
+//          Order matters for free functions but less so with member functions, those in structs and classes. 
+//          Since all parts are read in at once? they can be declared out of order
+// - Static 
+//          Free functions that have: 'Static' makes it local to file only. Could also be using NameSpaces 
+// 
+// 
+// 
+// 
+//      
+
+
+
 
 
 // -------------------- Includes --------------------

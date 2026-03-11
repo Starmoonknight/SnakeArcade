@@ -9,8 +9,10 @@
 struct Snake
 {
 public:
+    // constructor(s)
     Snake() = default; 
 
+    // public queries (read-only info)
     bool Empty() const;
     std::size_t Length() const;
     const std::deque<Vec2>& Body() const;
@@ -21,20 +23,23 @@ public:
     Direction Dir() const;
     Direction NextDir() const;
 
-    void ResetTo(const Vec2& startPos, int startLength = 1, Direction startDir = Direction::Up);
-    void SetNextDirection(Direction dir);
-    void Move(bool grow);
-
     Vec2 PeekNextMove() const; 
     bool Occupies(const Vec2& pos) const;
     bool HitSelf() const; 
 
+    // public actions / state changes
+    void ResetTo(const Vec2& startPos, int startLength = 1, Direction startDir = Direction::Up);
+    void SetNextDirection(Direction dir);
+    void Move(bool grow);
+
 
 private:
+    // data members
     std::deque<Vec2> m_body{};
     Direction m_dir{ Direction::Up };
     Direction m_nextDir{ Direction::Up };
 
+    // private helper declarations
     void AddHead(const Vec2& pos); 
     void RemoveTail();
 };

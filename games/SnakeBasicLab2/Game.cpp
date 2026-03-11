@@ -1,6 +1,7 @@
 // Game.cpp
 #include "Game.h"
 #include "GameGrid.h"
+#include "Vec2.h"
 #include "Input.h"
 #include "Snake.h"
 #include <cstdlib>      // std::system
@@ -15,18 +16,18 @@ void ClampPosition(const GameGrid& grid, Vec2& pos)
 {
 
     if (pos.x < 0) pos.x = 0;
-    if (pos.x >= grid.width) pos.x = grid.width - 1;
+    if (pos.x >= grid.Width()) pos.x = grid.Width() - 1;
     if (pos.y < 0) pos.y = 0;
-    if (pos.y >= grid.height) pos.y = grid.height - 1;
+    if (pos.y >= grid.Height()) pos.y = grid.Height() - 1;
 }
 
 void WrapPosition(const GameGrid& grid, Vec2& pos)
 {
 
-    if (pos.x < 0) pos.x = grid.width - 1;
-    if (pos.x >= grid.width) pos.x = 0;
-    if (pos.y < 0) pos.y = grid.height - 1;
-    if (pos.y >= grid.height) pos.y = 0;
+    if (pos.x < 0) pos.x = grid.Width() - 1;
+    if (pos.x >= grid.Width()) pos.x = 0;
+    if (pos.y < 0) pos.y = grid.Height() - 1;
+    if (pos.y >= grid.Height()) pos.y = 0;
 }
 
 
@@ -87,7 +88,7 @@ void PaintSnake(GameGrid& grid, const GameConfig& cfg, const Snake& snake)
         if (!grid.InBounds(coord))
             continue;
 
-        grid.SetCell(coord.x, coord.y, isHead ? cfg.snakeHead : cfg.snakeBody);
+        grid.SetCell(coord, isHead ? cfg.snakeHead : cfg.snakeBody);
         isHead = false;
     }
 }
@@ -136,10 +137,10 @@ void RunPlayLoop(const GameConfig& cfg, Snake& snake, int& score)
         // RENDER
         grid.ClearGrid();
         PaintSnake(grid, cfg, snake);
-        RenderGrid(grid, cfg.gridBoarder);
+        RenderGrid(grid, cfg.gridBorderH, cfg.gridBorderV);
 
         // READ
-        char cmd = ReadCharChoice("Move (W/A/S/D), menu (Q): ", "wasdq");
+        char cmd = Input::ReadCharChoice("Move (W/A/S/D), menu (Q): ", "wasdq");
 
         // UPDATE 
         if (cmd == 'q')
@@ -179,8 +180,8 @@ void Run()
             std::string choiceStr;
             std::getline(std::cin, choiceStr);
 
-            std::string_view stringView = TrimLeftWS(choiceStr);
-            if (!ValidateCharOrPrintCustomMsg(stringView, "1234", "Please enter a valid value number between 1-4\n"))
+            std::string_view stringView = Input::TrimLeftWS(choiceStr);
+            if (!Input::ValidateCharOrPrintCustomMsg(stringView, "1234", "Please enter a valid value number between 1-4\n"))
                 continue;
 
             choice = stringView.front();

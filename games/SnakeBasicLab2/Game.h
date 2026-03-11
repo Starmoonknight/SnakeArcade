@@ -1,8 +1,8 @@
 // Game.h
 #pragma once
-#include "Vec2.h"
 
-struct GameGrid; 
+struct Vec2; 
+class GameGrid; 
 struct Snake; 
 
 
@@ -15,7 +15,8 @@ struct GameConfig
     int width{ 16 };
     int height{ 12 };
     char empty{ '.' };
-    char gridBoarder{ '#' };
+    char gridBorderH{ '#' };
+    char gridBorderV{ '#' };
 
     // icons
     char snakeHead{ 'O' };
