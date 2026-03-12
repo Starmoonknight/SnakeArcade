@@ -1,5 +1,6 @@
 // Game.h
 #pragma once
+#include <cstdint>
 
 struct Vec2; 
 class GameGrid; 
@@ -22,6 +23,9 @@ struct GameConfig
     char snakeHead{ 'O' };
     char snakeBody{ 'o' };
     char apple{ '?' };
+
+    // rng
+    std::uint32_t seed{ 12345u };
 };
 
 

@@ -3,6 +3,8 @@
 #include "Vec2.h" 
 #include <vector>
 #include <string>
+#include <random>
+#include <cstdint>
 
 struct GameConfig;
 
@@ -16,9 +18,8 @@ public:
     // public queries (read-only info)
     int Width() const;
     int Height() const;
-
-    int ToIndex(const Vec2& pos) const;
     bool InBounds(const Vec2& pos) const;
+    bool IsEmptyCell(const Vec2& pos) const;
 
     char GetCell(const Vec2& pos) const;
     bool HasFruit() const;
@@ -28,7 +29,7 @@ public:
 
     // public actions / state changes
     void SetCell(const Vec2& pos, char c);
-    void PlaceFruitAt(const Vec2& pos, char c);
+    void PlaceFruitAtEmpty(const Vec2& pos, char c);
     void PlaceFruitRandom(char c);
 
     void ClearFruit(); 
@@ -42,6 +43,12 @@ private:
     bool m_hasFruit{ false };
     Vec2 m_fruitCoord{};
     std::vector<char> m_grid;
+
+    std::uint32_t m_rootSeed{};
+    std::mt19937 m_rngFruit; 
+
+    std::size_t ToCellIndex(const Vec2& pos) const;
+    Vec2 IndexToCellCoord(std::size_t index) const; 
 };
 
 
