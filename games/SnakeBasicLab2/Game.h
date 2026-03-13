@@ -1,10 +1,12 @@
 // Game.h
 #pragma once
-#include <cstdint>
+#include "GameGrid.h"
+#include "Snake.h"
+#include "Food.h"
+#include <cstdint>      // int in size instead of long, like: uint32_t
+#include <random>
 
-struct Vec2; 
-class GameGrid; 
-struct Snake; 
+struct Vec2;
 
 
 struct GameConfig
@@ -40,20 +42,58 @@ enum GameState
 
 
 
-// Game helpers / math
-void ClampPosition(const GameGrid& grid, Vec2& pos);
-void WrapPosition(const GameGrid& grid, Vec2& pos);
 
-// Rendering
-void PressEnterPrompt();
-void RenderMainMenu();
-void RenderHelpMenu();
-void RenderScoreBoard(const int& bestScore);
 
-// Gameplay
-void PaintSnake(GameGrid& grid, const GameConfig& cfg, const Snake& snake);
-void UpdateSnakeDirFromInput(Snake& snake, const char& cmd);
-void StepSnake(const GameGrid& grid, Snake& snake, bool growThisTurn = false);
-void RunPlayLoop(const GameConfig& cfg, Snake& snake, int& score);
+class Game
+{
+public:
+    Game(); 
+    void Run(); 
 
-void Run(); 
+private:
+    GameConfig m_cfg;
+    GameGrid m_grid;
+    Snake m_snake;
+    Food m_food; 
+
+    std::uint32_t m_rootSeed{};
+    std::mt19937 m_rngFruit;
+
+    int m_score{ 0 };
+    int m_bestScore{ 0 };
+    bool m_running{ false };
+    bool m_playing{ false };
+    GameState m_state{ GameState::MainMenu }; 
+
+private:
+    // Small Game logic helpers / math
+    void ClampPosition(Vec2& pos);
+    void WrapPosition(Vec2& pos);
+
+    // Rendering
+    void PressEnterPrompt();
+    void RenderMainMenu();
+    void RenderHelpMenu();
+    void RenderScoreBoard();
+
+    // Render Helper
+    void PaintSnake();
+    void PaintFood(); 
+
+    // Gameplay Helpers
+    bool IsCellBlockedForFood(const Vec2& pos);
+    bool TrySpawnFoodAtEmpty(const Vec2& pos); 
+    bool TrySpawnFoodAtRandom(); 
+    void ClearFruit();
+
+    // Gameplay
+    void UpdateSnakeDirFromInput(const char cmd);
+    bool MoveSnake();
+
+    void HandlePlayingInput();
+    void UpdatePlaying();
+    void RenderPlaying();
+
+    void RunPlayLoop();
+};
+

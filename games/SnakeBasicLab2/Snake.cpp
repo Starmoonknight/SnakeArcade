@@ -48,6 +48,7 @@ void Snake::ResetTo(const Vec2& startPos, int startLength, Direction startDir)
     m_body.clear();
     m_body.push_front(startPos);
     m_dir = startDir;
+    m_nextDir = startDir; 
 }
 
 void Snake::SetNextDirection(Direction dir)

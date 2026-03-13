@@ -55,5 +55,6 @@ int main()
 {
     std::cout << "Hallowed Woid! Play some Snake\n";
 
-    Run(); 
+    Game game;
+    game.Run(); 
 }
