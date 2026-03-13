@@ -16,8 +16,11 @@
 // - Static 
 //          Free functions that have: 'Static' makes it local to file only. Could also be using NameSpaces 
 // 
+// - Lambdas
+//          Smaller unamed nested local functions that has scope access to variables and data members
 // 
-// 
+// - RNG  
+//          Using a seed value make multiple individual rng to keep call order consistent between games 
 // 
 //      
 

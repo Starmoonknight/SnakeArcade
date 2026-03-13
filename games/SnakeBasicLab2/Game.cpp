@@ -4,7 +4,34 @@
 #include "Input.h"
 #include <cstdlib>      // std::system
 #include <iostream>
+#include <iomanip>      // format printed output, formatting tools for streams. 
+#include <sstream>      // string streams, a stream that works on strings
 #include <algorithm>
+
+
+// namespace or static (outside classes only!) on free functions does kind of the same thing? 
+// making it an internal to this script only / internal linkage / invisible to outside scripts kind of function 
+namespace
+{
+    constexpr int kInnerWidth = 29;
+
+    std::string BoxTop()
+    {
+        return " " + std::string(kInnerWidth + 2, '_');
+    }
+
+    std::string BoxLine(const std::string& text)
+    {
+        std::ostringstream out;
+        out << "| " << std::left << std::setw(kInnerWidth) << text << "|";
+        return out.str();
+    }
+
+    std::string BoxBottom()
+    {
+        return "|" + std::string(kInnerWidth + 1, '_') + "|";
+    }
+}
 
 
 
@@ -81,9 +108,29 @@ void Game::RenderScoreBoard()
 {
     std::system("cls");
     std::cout << "\n--- Leaderboard ---\n";
-    std::cout << "\nBest score: " << m_bestScore << "\n";
+    std::cout << "\nBest score: " << m_highScore << "\n";
     PressEnterPrompt();
 
+    std::string input;
+    std::getline(std::cin, input);
+}
+
+// placeholder 
+void Game::RenderGameOver()
+{
+    std::system("cls");
+
+    std::cout << BoxTop() << '\n';
+    std::cout << BoxLine("") << '\n';
+    std::cout << BoxLine("--- Game Over ---") << '\n';
+    std::cout << BoxLine("") << '\n';
+    std::cout << BoxLine("High Score: " + std::to_string(m_highScore)) << '\n';
+    std::cout << BoxLine("Score:      " + std::to_string(m_score)) << '\n';
+    std::cout << BoxLine("") << '\n';
+    std::cout << BoxLine("Enter your name: _ _ _") << '\n';
+    std::cout << BoxBottom() << '\n';
+
+    // For now since it does not save anything yet
     std::string input;
     std::getline(std::cin, input);
 }
@@ -292,6 +339,9 @@ void Game::RunPlayLoop()
         UpdatePlaying();
         RenderPlaying(); 
 
+        if (m_playing == false)
+            RenderGameOver(); 
+
         // update score at each succefull movement in next step / when fruit exists change to that 
     }
 }
@@ -347,8 +397,8 @@ void Game::Run()
             RunPlayLoop();
 
             std::cout << "Score: " << m_score << std::endl;
-            if (m_score > m_bestScore)
-                m_bestScore = m_score;
+            if (m_score > m_highScore)
+                m_highScore = m_score;
 
             m_state = GameState::MainMenu;
 

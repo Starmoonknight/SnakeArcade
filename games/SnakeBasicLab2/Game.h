@@ -41,6 +41,37 @@ enum GameState
 };
 
 
+/*
+
+// Looked at an idea of making a data package of the result to handle combinatins more easily.
+// Wayyyyyyyy overscoped for a snake game but intresting to look at for something where resolve order matters a lot and has more moving parts
+
+struct MoveResult
+{
+    bool moved{ false };
+    bool ateFruit{ false };
+    bool hitWall{ false };
+    bool hitSelf{ false };
+    bool atePowerUp{ false };
+    bool ateEnemy{ false };
+};
+
+
+// Using these two enums are also overscoped for snake but wanted to try one of my ideas, later, for handling game state updates
+enum MoveResult
+{
+    NoMove,
+    Moved,
+    HitWall,
+    HitSelf,
+};
+
+enum SpecialEffects
+{
+    None,
+    AteFruit,
+};
+*/
 
 
 
@@ -60,7 +91,7 @@ private:
     std::mt19937 m_rngFruit;
 
     int m_score{ 0 };
-    int m_bestScore{ 0 };
+    int m_highScore{ 0 };
     bool m_running{ false };
     bool m_playing{ false };
     GameState m_state{ GameState::MainMenu }; 
@@ -75,6 +106,7 @@ private:
     void RenderMainMenu();
     void RenderHelpMenu();
     void RenderScoreBoard();
+    void RenderGameOver(); 
 
     // Render Helper
     void PaintSnake();
