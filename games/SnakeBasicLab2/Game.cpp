@@ -1,18 +1,29 @@
 // Game.cpp
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+
 #include "Game.h"
 #include "Vec2.h"
-#include "Input.h"
+#include "MenuInput.h"
+#include "GameInput.h"
+
 #include <cstdlib>      // std::system
 #include <iostream>
 #include <iomanip>      // format printed output, formatting tools for streams. 
-#include <sstream>      // string streams, a stream that works on strings
+#include <sstream>      // string streams. A stream that works on strings
 #include <algorithm>
+#include <chrono>
+#include <thread>
+#include <Windows.h>
+
 
 
 // namespace or static (outside classes only!) on free functions does kind of the same thing? 
 // making it an internal to this script only / internal linkage / invisible to outside scripts kind of function 
 namespace
 {
+
+    // game-over box draver helpers 
     constexpr int kInnerWidth = 29;
 
     std::string BoxTop()
@@ -31,6 +42,38 @@ namespace
     {
         return "|" + std::string(kInnerWidth + 1, '_') + "|";
     }
+
+    // ----------------------------------------------------------------------
+
+    void SetCursorHome()
+    {
+        static const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        std::cout.flush(); 
+
+        COORD coord{ 0,0 };
+        SetConsoleCursorPosition(hOut, coord);
+    }
+
+    void HideCursor()
+    {
+        static const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        CONSOLE_CURSOR_INFO info{};
+        GetConsoleCursorInfo(hOut, &info);
+        info.bVisible = FALSE;
+        SetConsoleCursorInfo(hOut, &info); 
+    }
+
+    void ShowCursor()
+    {
+        static const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        CONSOLE_CURSOR_INFO info{};
+        GetConsoleCursorInfo(hOut, &info);
+        info.bVisible = TRUE;
+        SetConsoleCursorInfo(hOut, &info); 
+    }
+
 }
 
 
@@ -135,6 +178,21 @@ void Game::RenderGameOver()
     std::getline(std::cin, input);
 }
 
+void Game::RenderPlaying()
+{
+    SetCursorHome(); 
+
+    std::cout << "WASD = Move    Q = Menu\n\n";
+
+    std::cout << "Score: " << m_score << "\n\n";
+    m_grid.ClearGrid();
+    PaintFood();
+    PaintSnake();
+    RenderGrid(m_cfg, m_grid);
+
+    std::cout.flush(); 
+}
+
 
 
 
@@ -144,7 +202,6 @@ void Game::PaintSnake()
 {
     bool isHead = true;
 
-    // PLACEHOLDER: painting all segments as the head char for now
     for (const Vec2& coord : m_snake.Body())
     {
         if (!m_grid.InBounds(coord))
@@ -270,6 +327,7 @@ bool Game::MoveSnake()
     Vec2 nextPos = m_snake.PeekNextMove();        
     if (!m_grid.InBounds(nextPos))
     {
+        m_playerDied = true; 
         m_playing = false; 
         return false; 
     }
@@ -279,6 +337,7 @@ bool Game::MoveSnake()
 
     if (m_snake.HitSelf())
     {
+        m_playerDied = true; 
         m_playing = false;
         return false;
     }
@@ -289,10 +348,14 @@ bool Game::MoveSnake()
 
 void Game::HandlePlayingInput()
 {
-    char cmd = Input::ReadCharChoice("Move (W/A/S/D), menu (Q): ", "wasdq");
+    char cmd{}; 
+
+    if (!GameInput::TryReadLatestNormalizedChar(cmd))
+        return; 
 
     if (cmd == 'q')
     {
+        m_playerDied = false; 
         m_playing = false;
         return;
     }
@@ -312,38 +375,68 @@ void Game::UpdatePlaying()
         ++m_score; 
         m_food.SetFruitStatus(false); 
         TrySpawnFoodAtRandom(); 
+
+        m_cfg.tickSpeedMS = std::max(m_cfg.minTickSpeed, m_cfg.tickSpeedMS - m_cfg.speedStepMs);
     }
 }
 
-void Game::RenderPlaying()
-{
-    m_grid.ClearGrid();
-    PaintFood();
-    PaintSnake();
-    RenderGrid(m_grid, m_cfg.gridBorderH, m_cfg.gridBorderV);
-}
 
+void Game::StartNewRun()
+{
+    const Vec2 startPos{ ((m_cfg.width / 2) - 1),((m_cfg.height / 2) - 1) };
+    
+    m_snake.ResetTo(startPos);
+    m_score = 0;
+    m_playerDied = false; 
+    m_playing = true;
+
+    // change to allow tickSpeedMS to be set by player, startTickMs will still be default fallback  
+    m_cfg.tickSpeedMS = m_cfg.startTickMs; 
+
+    TrySpawnFoodAtRandom(); 
+
+    std::system("cls");
+    HideCursor(); 
+}
 
 void Game::RunPlayLoop()
 {
-    const Vec2 startPos{ ((m_cfg.width / 2) - 1),((m_cfg.height / 2) - 1) };
-    m_snake.ResetTo(startPos);
+    using clock = std::chrono::steady_clock;
+    auto lastTick = clock::now(); 
 
-    TrySpawnFoodAtRandom(); 
     RenderPlaying();
 
-    m_playing = true;
     while (m_playing)
     {
-        HandlePlayingInput();
-        UpdatePlaying();
-        RenderPlaying(); 
+        if (m_state == GameState::Paused)
+        {
+            // HandlePausedInput();     // pause menu + game instructions(Move (W/A/S/D), menu (Q):) and optin to quit or return to main-menu here
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
 
-        if (m_playing == false)
-            RenderGameOver(); 
+        HandlePlayingInput();
+
+        const auto now = clock::now();
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTick);
+
+        if (elapsed.count() >= m_cfg.tickSpeedMS) 
+        {
+            UpdatePlaying();
+            RenderPlaying(); 
+            lastTick = now; 
+        }
 
         // update score at each succefull movement in next step / when fruit exists change to that 
+
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1)); 
     }
+
+    ShowCursor();
+
+    if (m_playerDied)
+        RenderGameOver(); 
 }
 
 
@@ -365,8 +458,8 @@ void Game::Run()
             std::string choiceStr;
             std::getline(std::cin, choiceStr);
 
-            std::string_view stringView = Input::TrimLeftWS(choiceStr);
-            if (!Input::ValidateCharOrPrintCustomMsg(stringView, "1234", "Please enter a valid value number between 1-4\n"))
+            std::string_view stringView = MenuInput::TrimLeftWS(choiceStr);
+            if (!MenuInput::ValidateCharOrPrintCustomMsg(stringView, "1234", "Please enter a valid value number between 1-4\n"))
                 continue;
 
             choice = stringView.front();
@@ -393,7 +486,7 @@ void Game::Run()
         }
         case GameState::Playing:
         {
-            m_score = 0;
+            StartNewRun();
             RunPlayLoop();
 
             std::cout << "Score: " << m_score << std::endl;

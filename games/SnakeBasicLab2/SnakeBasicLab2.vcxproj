@@ -127,7 +127,8 @@
   <ItemGroup>
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameGrid.cpp" />
-    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="GameInput.cpp" />
+    <ClCompile Include="MenuInput.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Snake.cpp" />
   </ItemGroup>
@@ -136,7 +137,8 @@
     <ClInclude Include="Food.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameGrid.h" />
-    <ClInclude Include="Input.h" />
+    <ClInclude Include="GameInput.h" />
+    <ClInclude Include="MenuInput.h" />
     <ClInclude Include="Snake.h" />
     <ClInclude Include="Vec2.h" />
   </ItemGroup>

@@ -21,7 +21,7 @@ public:
     bool IsEmptyCell(const Vec2& pos) const;
 
     char GetCell(const Vec2& pos) const;
-    std::string ToString(char gridBorderH, char gridBorderV) const;
+    std::string ToString(const GameConfig& cfg) const;
 
     // public actions / state changes
     void SetCell(const Vec2& pos, char c);
@@ -40,4 +40,4 @@ private:
 
 
 
-void RenderGrid(const GameGrid& grid, char gridBorderH, char gridBorderV);
+void RenderGrid(const GameConfig& cfg, const GameGrid& grid);

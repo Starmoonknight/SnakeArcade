@@ -1,12 +1,12 @@
 // Input.cpp
-#include "Input.h"
+#include "MenuInput.h"
 #include <iostream>
 #include <limits>       // std::numeric_limits  -> ClearInputLine()
 #include <cctype>       // std::tolower  // trim 
 #include <cstddef>      // std::size_t
  
 
-namespace Input
+namespace MenuInput
 { 
     // ----- Input Handling -----
 
@@ -25,6 +25,7 @@ namespace Input
     }
 
     // turns "1234" into "1 / 2 / 3 / 4"   (or could be "1, 2, 3, 4" if separator like ", " is provided)
+    // rename to FormatAllowedChoices
     std::string JoinAllowedChoices(std::string_view allowedChars, std::string_view separator)            // this is probably an uneccessary method, better to hardcode? 
     {
         std::string out;

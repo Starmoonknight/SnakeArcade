@@ -5,6 +5,8 @@
 #include "Food.h"
 #include <cstdint>      // int in size instead of long, like: uint32_t
 #include <random>
+#include <string_view>
+
 
 struct Vec2;
 
@@ -12,9 +14,12 @@ struct Vec2;
 struct GameConfig
 {
     // game settings 
-    int tickSpeed{};
+    int tickSpeedMS{};
+    int startTickMs{ 180 };
+    int minTickSpeed{ 10 };
+    int speedStepMs{ 5 };
 
-    // grid settings
+    // grid settings 
     int width{ 16 };
     int height{ 12 };
     char empty{ '.' };
@@ -25,6 +30,23 @@ struct GameConfig
     char snakeHead{ 'O' };
     char snakeBody{ 'o' };
     char apple{ '?' };
+
+    // colors / styles
+    std::string_view resetStyle{ "\x1b[0m" };   //      38;5;N = foreground color       48;5;N = background color       \x1b[0m = reset back to normal
+
+    // earthy floor
+    std::string_view emptyStyle{ "\x1b[38;5;180;48;5;94m" };
+
+    // warm border
+    std::string_view borderStyle{ "\x1b[38;5;223;48;5;52m" };
+
+    // green snake
+    std::string_view snakeHeadStyle{ "\x1b[38;5;46;48;5;94m" };
+    std::string_view snakeBodyStyle{ "\x1b[38;5;34;48;5;94m" };
+
+    // red fruit
+    std::string_view appleStyle{ "\x1b[38;5;196;48;5;94m" };
+
 
     // rng
     std::uint32_t seed{ 12345u };
@@ -94,6 +116,7 @@ private:
     int m_highScore{ 0 };
     bool m_running{ false };
     bool m_playing{ false };
+    bool m_playerDied{ false };
     GameState m_state{ GameState::MainMenu }; 
 
 private:
@@ -126,6 +149,7 @@ private:
     void UpdatePlaying();
     void RenderPlaying();
 
+    void StartNewRun(); 
     void RunPlayLoop();
 };
 

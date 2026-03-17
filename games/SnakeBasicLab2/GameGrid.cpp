@@ -2,12 +2,33 @@
 #include "GameGrid.h"
 #include "Game.h"
 #include <iostream>
+#include <string_view>
 
 
-
-void RenderGrid(const GameGrid& grid, char gridBorderH, char gridBorderV)       // char gridBoarder, why not const + &   Answer: char is small, a ref pointer is not less expensive so not worth it.      (does a char_view exist?)  
+namespace
 {
-    std::cout << grid.ToString(gridBorderH, gridBorderV);
+    void AppendStyledCell(std::string& out, char c,
+        std::string_view style, std::string_view reset)
+    {
+        out.append(style.data(), style.size());
+        out.push_back(c);
+        out.push_back(' ');
+        out.append(reset.data(), reset.size()); 
+    }
+
+    std::string_view StyleForCell(char c, const GameConfig& cfg)
+    {
+        if (c == cfg.snakeHead) return cfg.snakeHeadStyle;
+        if (c == cfg.snakeBody) return cfg.snakeBodyStyle;
+        if (c == cfg.apple) return cfg.appleStyle;
+        return cfg.emptyStyle; 
+    }
+}
+
+
+void RenderGrid(const GameConfig& cfg, const GameGrid& grid)       // char gridBoarder, why not const + &   Answer: char is small, a ref pointer is not less expensive so not worth it.      (does a char_view exist?)  
+{
+    std::cout << grid.ToString(cfg);
 }
 
 
@@ -46,7 +67,7 @@ char GameGrid::GetCell(const Vec2& pos) const
     return m_grid[ToCellIndex(pos)];
 }
 
-std::string GameGrid::ToString(char gridBorderH, char gridBorderV) const
+std::string GameGrid::ToString(const GameConfig& cfg) const
 {
     // found out about lambdas so trying one here
     const auto estimatedCapacity = [this]() -> std::size_t
@@ -65,6 +86,9 @@ std::string GameGrid::ToString(char gridBorderH, char gridBorderV) const
 
     // if using a plain value
     //s.reserve(200);     // why use set number insted of formula like: s.reserve(static_cast<size_t>((m_width * 2 + 1) * m_height + 64));
+
+    const char gridBorderH = cfg.gridBorderH;
+    const char gridBorderV = cfg.gridBorderV; 
 
     std::string s;
     s.reserve(estimatedCapacity()); 
@@ -102,6 +126,50 @@ std::string GameGrid::ToString(char gridBorderH, char gridBorderV) const
 
     return s; 
 }
+
+// switch to after lab 2
+/*
+std::string GameGrid::ToString(const GameConfig& cfg) const
+{
+    const auto estimatedCapacity = [this]() -> std::size_t
+        {
+            return static_cast<std::size_t>((m_height + 2) * (2 * m_width + 20));
+        };
+
+    std::string s;
+    s.reserve(estimatedCapacity());
+
+    for (int x = 0; x < m_width + 2; ++x)
+    {
+        AppendStyledCell(s, cfg.gridBorderH, cfg.borderStyle, cfg.resetStyle);
+    }
+    s += '\n';
+
+    for (int y = 0; y < m_height; ++y)
+    {
+        AppendStyledCell(s, cfg.gridBorderV, cfg.borderStyle, cfg.resetStyle);
+
+        for (int x = 0; x < m_width; ++x)
+        {
+            const Vec2 pos{ x, y };
+            const char cell = GetCell(pos);
+            AppendStyledCell(s, cell, StyleForCell(cell, cfg), cfg.resetStyle);
+        }
+
+        AppendStyledCell(s, cfg.gridBorderV, cfg.borderStyle, cfg.resetStyle);
+        s += '\n';
+    }
+
+    for (int x = 0; x < m_width + 2; ++x)
+    {
+        AppendStyledCell(s, cfg.gridBorderH, cfg.borderStyle, cfg.resetStyle);
+    }
+    s += '\n';
+
+    return s;
+}
+*/
+
 
 // writes a char to a grid cell
 void GameGrid::SetCell(const Vec2& pos, char c)

@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>  
 
-namespace Input
+namespace MenuInput
 {
     // Input handling
     void ClearInputLine();
