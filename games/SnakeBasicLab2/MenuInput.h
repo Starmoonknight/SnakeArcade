@@ -21,5 +21,7 @@ namespace MenuInput
     std::string ReadLine();
     std::string ReadLine(std::string_view prompt);
     char ReadCharChoice(std::string_view prompt, std::string_view allowed);
+
+    void ExpectEnterConfirmation(); 
 }
 

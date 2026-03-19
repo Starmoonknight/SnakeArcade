@@ -113,6 +113,7 @@ namespace MenuInput
             }
         } 
 
+
         // if no while loop could do:
         /*
         if (sv.empty())
@@ -121,6 +122,15 @@ namespace MenuInput
         unsigned char ch = static_cast<unsigned char>(sv.front());
         return static_cast<char>(std::tolower(ch));
         */
+
+
+    }
+
+
+    void ExpectEnterConfirmation()
+    {
+        std::string input;
+        std::getline(std::cin, input);
     }
 
 }

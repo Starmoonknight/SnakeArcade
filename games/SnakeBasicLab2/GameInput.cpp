@@ -58,12 +58,13 @@ namespace GameInput
 
 		int ch = _getch();
 
-		if (ch == 0 || ch == 0xE0)
+		if (ch == 0 || ch == 0xE0)	// if input is special symbols like arrow keys:  Need to call again to consume full arrow/function-key sequence? There seems to be a two-call behavior for arrow/function keys. 
 		{
-			int ext = _getch();		// consume second part.		Need to call again to consume full arrow/function-key sequence? There seems to be a two-call behavior for arrow/function keys. 
+			int ext = _getch();		// consume second part.
 			return TryMapExtendedKey(ext, outChar); 
 		}
 
+		// when no special symbols where noticed, use the simpler compare 
 		return TryMapBasicKey(ch, outChar);
 	}
 
@@ -72,20 +73,24 @@ namespace GameInput
 		bool found = false; 
 		char latest{};
 
+		// while any key is still stored in the buffer, continue to loop through them all for any match
 		while (_kbhit())
 		{
 			char current{};
 			if (TryReadNormalizedChar(current))
 			{
+				// save inputs that match commands, but overwrite if newer are found. Allow keyboard bashing 
+				// Latest input == used input. 
 				latest = current;
 				found = true;
 			}
 		}
+		// after loop is done all inputs in the buffer should have been consumed 
 
 		if (found)
-			outChar = latest;
+			outChar = latest;	// update the stored char directly by ref, but only if a valid command was found 
 
-		return found;
+		return found;			// the bool tells if the outChar is ok to use or not
 	}
 
 

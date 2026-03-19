@@ -1,80 +1,15 @@
 // Game.cpp
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-
 #include "Game.h"
 #include "Vec2.h"
 #include "MenuInput.h"
 #include "GameInput.h"
+#include "GameRender.h"
 
-#include <cstdlib>      // std::system
-#include <iostream>
-#include <iomanip>      // format printed output, formatting tools for streams. 
-#include <sstream>      // string streams. A stream that works on strings
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 #include <thread>
-#include <Windows.h>
 
-
-
-// namespace or static (outside classes only!) on free functions does kind of the same thing? 
-// making it an internal to this script only / internal linkage / invisible to outside scripts kind of function 
-namespace
-{
-
-    // game-over box draver helpers 
-    constexpr int kInnerWidth = 29;
-
-    std::string BoxTop()
-    {
-        return " " + std::string(kInnerWidth + 2, '_');
-    }
-
-    std::string BoxLine(const std::string& text)
-    {
-        std::ostringstream out;
-        out << "| " << std::left << std::setw(kInnerWidth) << text << "|";
-        return out.str();
-    }
-
-    std::string BoxBottom()
-    {
-        return "|" + std::string(kInnerWidth + 1, '_') + "|";
-    }
-
-    // ----------------------------------------------------------------------
-
-    void SetCursorHome()
-    {
-        static const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        std::cout.flush(); 
-
-        COORD coord{ 0,0 };
-        SetConsoleCursorPosition(hOut, coord);
-    }
-
-    void HideCursor()
-    {
-        static const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
-        CONSOLE_CURSOR_INFO info{};
-        GetConsoleCursorInfo(hOut, &info);
-        info.bVisible = FALSE;
-        SetConsoleCursorInfo(hOut, &info); 
-    }
-
-    void ShowCursor()
-    {
-        static const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
-        CONSOLE_CURSOR_INFO info{};
-        GetConsoleCursorInfo(hOut, &info);
-        info.bVisible = TRUE;
-        SetConsoleCursorInfo(hOut, &info); 
-    }
-
-}
 
 
 
@@ -116,87 +51,8 @@ void Game::WrapPosition(Vec2& pos)
 }
 
 
-// ----- Render Methods -----
 
-void Game::PressEnterPrompt()
-{
-    std::cout << "\nPress ENTER to return to menu...";
-}
-
-void Game::RenderMainMenu()
-{
-    std::system("cls");
-    std::cout << "\n=== SNAKE MAIN MENU ===\n";
-    std::cout << "1) Play" << std::endl;
-    std::cout << "2) Controls / Help\n";
-    std::cout << "3) Leaderboards\n";
-    std::cout << "4) Quit\n";
-    std::cout << "Select: ";
-}
-
-void Game::RenderHelpMenu()
-{
-    std::system("cls");
-    std::cout << "\n--- Controls / Help ---\n";
-    std::cout << "Player move with w/a/s/d\n ";
-    std::cout << "In game press q to return to menu\n ";
-    std::cout << "(More to come soon...)\n ";
-    PressEnterPrompt();
-
-    std::string input;
-    std::getline(std::cin, input);
-}
-
-void Game::RenderScoreBoard()
-{
-    std::system("cls");
-    std::cout << "\n--- Leaderboard ---\n";
-    std::cout << "\nBest score: " << m_highScore << "\n";
-    PressEnterPrompt();
-
-    std::string input;
-    std::getline(std::cin, input);
-}
-
-// placeholder 
-void Game::RenderGameOver()
-{
-    std::system("cls");
-
-    std::cout << BoxTop() << '\n';
-    std::cout << BoxLine("") << '\n';
-    std::cout << BoxLine("--- Game Over ---") << '\n';
-    std::cout << BoxLine("") << '\n';
-    std::cout << BoxLine("High Score: " + std::to_string(m_highScore)) << '\n';
-    std::cout << BoxLine("Score:      " + std::to_string(m_score)) << '\n';
-    std::cout << BoxLine("") << '\n';
-    std::cout << BoxLine("Enter your name: _ _ _") << '\n';
-    std::cout << BoxBottom() << '\n';
-
-    // For now since it does not save anything yet
-    std::string input;
-    std::getline(std::cin, input);
-}
-
-void Game::RenderPlaying()
-{
-    SetCursorHome(); 
-
-    std::cout << "WASD = Move    Q = Menu\n\n";
-
-    std::cout << "Score: " << m_score << "\n\n";
-    m_grid.ClearGrid();
-    PaintFood();
-    PaintSnake();
-    RenderGrid(m_cfg, m_grid);
-
-    std::cout.flush(); 
-}
-
-
-
-
-// ----- Gameplay -----
+// ----- Gameplay Helpers -----
 
 void Game::PaintSnake()
 {
@@ -346,6 +202,8 @@ bool Game::MoveSnake()
 }
 
 
+// ----- Gameplay Loop -----
+
 void Game::HandlePlayingInput()
 {
     char cmd{}; 
@@ -381,6 +239,17 @@ void Game::UpdatePlaying()
 }
 
 
+void Game::RebuildGridVisuals()
+{
+    m_grid.ClearGrid();
+    PaintFood();
+    PaintSnake();
+
+    //GameRender::RenderPlaying(m_cfg, m_grid, m_score);
+}
+
+
+
 void Game::StartNewRun()
 {
     const Vec2 startPos{ ((m_cfg.width / 2) - 1),((m_cfg.height / 2) - 1) };
@@ -396,7 +265,7 @@ void Game::StartNewRun()
     TrySpawnFoodAtRandom(); 
 
     std::system("cls");
-    HideCursor(); 
+    GameRender::HideCursor();
 }
 
 void Game::RunPlayLoop()
@@ -404,7 +273,7 @@ void Game::RunPlayLoop()
     using clock = std::chrono::steady_clock;
     auto lastTick = clock::now(); 
 
-    RenderPlaying();
+    RebuildGridVisuals();
 
     while (m_playing)
     {
@@ -423,7 +292,7 @@ void Game::RunPlayLoop()
         if (elapsed.count() >= m_cfg.tickSpeedMS) 
         {
             UpdatePlaying();
-            RenderPlaying(); 
+            RebuildGridVisuals(); 
             lastTick = now; 
         }
 
@@ -433,10 +302,13 @@ void Game::RunPlayLoop()
         std::this_thread::sleep_for(std::chrono::milliseconds(1)); 
     }
 
-    ShowCursor();
+    GameRender::ShowCursor();
 
     if (m_playerDied)
-        RenderGameOver(); 
+    {
+        GameRender::RenderGameOver(m_score, m_highScore);
+        MenuInput::ExpectEnterConfirmation();
+    }
 }
 
 
@@ -453,7 +325,7 @@ void Game::Run()
         {
         case GameState::MainMenu:
         {
-            RenderMainMenu();
+            GameRender::RenderMainMenu();
 
             std::string choiceStr;
             std::getline(std::cin, choiceStr);
@@ -474,11 +346,13 @@ void Game::Run()
         {
             if (choice == '2')
             {
-                RenderHelpMenu();
+                GameRender::RenderHelpMenu();
+                MenuInput::ExpectEnterConfirmation();
             }
             else if (choice == '3')
             {
-                RenderScoreBoard();
+                GameRender::RenderScoreBoard(m_highScore);
+                MenuInput::ExpectEnterConfirmation();
             }
 
             m_state = GameState::MainMenu;

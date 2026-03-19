@@ -3,6 +3,7 @@
 #include "GameGrid.h"
 #include "Snake.h"
 #include "Food.h"
+
 #include <cstdint>      // int in size instead of long, like: uint32_t
 #include <random>
 #include <string_view>
@@ -20,8 +21,8 @@ struct GameConfig
     int speedStepMs{ 5 };
 
     // grid settings 
-    int width{ 16 };
-    int height{ 12 };
+    int width{ 20 };
+    int height{ 16 };
     char empty{ '.' };
     char gridBorderH{ '#' };
     char gridBorderV{ '#' };
@@ -124,13 +125,6 @@ private:
     void ClampPosition(Vec2& pos);
     void WrapPosition(Vec2& pos);
 
-    // Rendering
-    void PressEnterPrompt();
-    void RenderMainMenu();
-    void RenderHelpMenu();
-    void RenderScoreBoard();
-    void RenderGameOver(); 
-
     // Render Helper
     void PaintSnake();
     void PaintFood(); 
@@ -141,13 +135,13 @@ private:
     bool TrySpawnFoodAtRandom(); 
     void ClearFruit();
 
-    // Gameplay
     void UpdateSnakeDirFromInput(const char cmd);
     bool MoveSnake();
 
+    // Gameplay
     void HandlePlayingInput();
     void UpdatePlaying();
-    void RenderPlaying();
+    void RebuildGridVisuals();
 
     void StartNewRun(); 
     void RunPlayLoop();
