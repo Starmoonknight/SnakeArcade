@@ -3,7 +3,7 @@
 #include "Vec2.h"
 #include "MenuInput.h"
 #include "GameInput.h"
-#include "GameRender.h"
+#include "GameRenderer.h"
 
 #include <algorithm>
 #include <chrono>
@@ -244,8 +244,6 @@ void Game::RebuildGridVisuals()
     m_grid.ClearGrid();
     PaintFood();
     PaintSnake();
-
-    //GameRender::RenderPlaying(m_cfg, m_grid, m_score);
 }
 
 
@@ -264,7 +262,7 @@ void Game::StartNewRun()
 
     TrySpawnFoodAtRandom(); 
 
-    std::system("cls");
+    GameRender::ClearConsole(); 
     GameRender::HideCursor();
 }
 
@@ -274,6 +272,7 @@ void Game::RunPlayLoop()
     auto lastTick = clock::now(); 
 
     RebuildGridVisuals();
+    GameRender::RenderPlaying(m_cfg, m_grid, m_score);
 
     while (m_playing)
     {
@@ -292,12 +291,12 @@ void Game::RunPlayLoop()
         if (elapsed.count() >= m_cfg.tickSpeedMS) 
         {
             UpdatePlaying();
-            RebuildGridVisuals(); 
+            RebuildGridVisuals();
+            GameRender::RenderPlaying(m_cfg, m_grid, m_score); 
             lastTick = now; 
         }
 
         // update score at each succefull movement in next step / when fruit exists change to that 
-
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1)); 
     }
@@ -306,7 +305,8 @@ void Game::RunPlayLoop()
 
     if (m_playerDied)
     {
-        GameRender::RenderGameOver(m_score, m_highScore);
+        const GameRender::BlockLayout helpLayout = GameRender::RenderGameOver(m_score, m_highScore);
+        GameRender::RenderPressEnterPrompt(helpLayout);   // For now, since GameOver screen does not save anything yet
         MenuInput::ExpectEnterConfirmation();
     }
 }
@@ -327,14 +327,11 @@ void Game::Run()
         {
             GameRender::RenderMainMenu();
 
-            std::string choiceStr;
-            std::getline(std::cin, choiceStr);
-
-            std::string_view stringView = MenuInput::TrimLeftWS(choiceStr);
-            if (!MenuInput::ValidateCharOrPrintCustomMsg(stringView, "1234", "Please enter a valid value number between 1-4\n"))
-                continue;
-
-            choice = stringView.front();
+            choice = MenuInput::ReadCharChoiceCustomMsg(
+                "",
+                "1234",
+                "Please enter a valid value number between 1-4\n"
+            );
 
             if (choice == '1') m_state = GameState::Playing;
             else if (choice == '2' || choice == '3') m_state = GameState::SubMenu;
@@ -346,12 +343,14 @@ void Game::Run()
         {
             if (choice == '2')
             {
-                GameRender::RenderHelpMenu();
+                const GameRender::BlockLayout helpLayout = GameRender::RenderHelpMenu();
+                GameRender::RenderPressEnterPrompt(helpLayout);
                 MenuInput::ExpectEnterConfirmation();
             }
             else if (choice == '3')
             {
-                GameRender::RenderScoreBoard(m_highScore);
+                const GameRender::BlockLayout helpLayout = GameRender::RenderScoreBoard(m_highScore);
+                GameRender::RenderPressEnterPrompt(helpLayout);
                 MenuInput::ExpectEnterConfirmation();
             }
 

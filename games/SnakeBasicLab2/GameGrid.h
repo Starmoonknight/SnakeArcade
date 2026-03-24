@@ -21,6 +21,7 @@ public:
     bool IsEmptyCell(const Vec2& pos) const;
 
     char GetCell(const Vec2& pos) const;
+    std::vector<std::string> ToLines(const GameConfig& cfg) const;
     std::string ToString(const GameConfig& cfg) const;
 
     // public actions / state changes

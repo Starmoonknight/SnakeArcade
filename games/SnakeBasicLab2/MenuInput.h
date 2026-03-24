@@ -1,4 +1,4 @@
-// Input.h
+// MenuInput.h
 #pragma once
 #include <string>
 #include <string_view>  
@@ -21,6 +21,7 @@ namespace MenuInput
     std::string ReadLine();
     std::string ReadLine(std::string_view prompt);
     char ReadCharChoice(std::string_view prompt, std::string_view allowed);
+    char ReadCharChoiceCustomMsg(std::string_view prompt, std::string_view allowedChars, std::string_view invalidInputMessage);
 
     void ExpectEnterConfirmation(); 
 }

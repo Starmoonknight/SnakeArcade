@@ -128,7 +128,7 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameGrid.cpp" />
     <ClCompile Include="GameInput.cpp" />
-    <ClCompile Include="GameRender.cpp" />
+    <ClCompile Include="GameRenderer.cpp" />
     <ClCompile Include="MenuInput.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Snake.cpp" />
@@ -139,7 +139,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameGrid.h" />
     <ClInclude Include="GameInput.h" />
-    <ClInclude Include="GameRender.h" />
+    <ClInclude Include="GameRenderer.h" />
     <ClInclude Include="MenuInput.h" />
     <ClInclude Include="ScoreManager.h" />
     <ClInclude Include="Snake.h" />

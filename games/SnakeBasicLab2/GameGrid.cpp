@@ -67,6 +67,62 @@ char GameGrid::GetCell(const Vec2& pos) const
     return m_grid[ToCellIndex(pos)];
 }
 
+std::vector<std::string> GameGrid::ToLines(const GameConfig& cfg) const
+{
+    const char gridBorderH = cfg.gridBorderH;
+    const char gridBorderV = cfg.gridBorderV;
+
+    std::vector<std::string> lines;
+    lines.reserve(m_height + 2); 
+
+    std::string tempLine; 
+    tempLine.reserve((m_width + 2) * 2); 
+
+    // internal lambda to avoid repeat line, but specific enough to not warrant it's own function
+    auto commitLine = [&]()
+    {
+        lines.push_back(tempLine);          // could also use lines.push_back(std::move(tempLine)); but unsure why? Need to look into copy vs move and then also emplace
+        tempLine.clear();
+    };
+
+    // build the top grid-border row 
+    for (int x = 0; x < m_width + 2; ++x)
+    {
+        tempLine += gridBorderH;                // top row rim
+        tempLine += ' ';                        // use '' when one char, and "" with more text 
+    }
+    commitLine(); 
+
+    // build the actuall grid rows
+    for (int y = 0; y < m_height; ++y)
+    {
+        tempLine += gridBorderV;                // left row rim
+        tempLine += ' ';
+
+        for (int x = 0; x < m_width; ++x)
+        {
+            Vec2 pos{ x, y };
+            tempLine += GetCell(pos);
+            tempLine += ' ';
+        }
+
+        tempLine += gridBorderV;                // right row rim
+        tempLine += ' ';
+
+        commitLine();                           // add every line to the vector 
+    }
+
+    // build the bottom grid-border row 
+    for (int x = 0; x < m_width + 2; ++x)
+    {
+        tempLine += gridBorderH;                // bottom row rim
+        tempLine += ' ';
+    }
+    commitLine();
+
+    return lines;
+}
+
 std::string GameGrid::ToString(const GameConfig& cfg) const
 {
     // found out about lambdas so trying one here
@@ -87,44 +143,17 @@ std::string GameGrid::ToString(const GameConfig& cfg) const
     // if using a plain value
     //s.reserve(200);     // why use set number insted of formula like: s.reserve(static_cast<size_t>((m_width * 2 + 1) * m_height + 64));
 
-    const char gridBorderH = cfg.gridBorderH;
-    const char gridBorderV = cfg.gridBorderV; 
+    std::string tempString;
+    tempString.reserve(estimatedCapacity()); 
 
-    std::string s;
-    s.reserve(estimatedCapacity()); 
-
-    for (int x = 0; x < m_width + 2; ++x)
+    std::vector<std::string> gridLines = ToLines(cfg); 
+    for (const std::string& line : gridLines)
     {
-        s += gridBorderH;                   // top row rim
-        s += ' ';
-    }
-    s += '\n';      // use '' when one char, and "" with more text 
-
-    for (int y = 0; y < m_height; ++y)
-    {
-        s += gridBorderV;                   // left row rim
-        s += ' ';    
-
-        for (int x = 0; x < m_width; ++x)
-        {
-            Vec2 pos{ x, y };
-            s += GetCell(pos);
-            s += ' ';
-        }
-
-        s += gridBorderV;                   // right row rim
-        s += ' ';        
-        s += '\n';
+        tempString += line;
+        tempString += '\n'; 
     }
 
-    for (int x = 0; x < m_width + 2; ++x)
-    {
-        s += gridBorderH;                   // bottom row rim
-        s += ' ';
-    }
-    s += '\n';
-
-    return s; 
+    return tempString; 
 }
 
 // switch to after lab 2

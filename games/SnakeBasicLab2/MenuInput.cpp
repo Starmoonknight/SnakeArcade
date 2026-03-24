@@ -1,5 +1,6 @@
-// Input.cpp
+// MenuInput.cpp
 #include "MenuInput.h"
+
 #include <iostream>
 #include <limits>       // std::numeric_limits  -> ClearInputLine()
 #include <cctype>       // std::tolower  // trim 
@@ -89,6 +90,7 @@ namespace MenuInput
         return ReadLine();
     }
 
+    // no longer in use
     char ReadCharChoice(std::string_view prompt, std::string_view allowedChar)
     {
         PrintPrompt(prompt);
@@ -113,7 +115,6 @@ namespace MenuInput
             }
         } 
 
-
         // if no while loop could do:
         /*
         if (sv.empty())
@@ -123,9 +124,25 @@ namespace MenuInput
         return static_cast<char>(std::tolower(ch));
         */
 
-
     }
 
+    char ReadCharChoiceCustomMsg(std::string_view prompt, std::string_view allowedChars, std::string_view invalidInputMessage)
+    {
+        PrintPrompt(prompt);
+
+        while (true)
+        {
+            std::string line = ReadLine();
+            std::string_view sv = TrimLeftWS(line);
+
+            if (ValidateCharOrPrintCustomMsg(sv, allowedChars, invalidInputMessage))
+            {
+                unsigned char uch = static_cast<unsigned char>(sv.front());
+                return static_cast<char>(std::tolower(uch));
+            }
+        }
+    }
+    
 
     void ExpectEnterConfirmation()
     {
