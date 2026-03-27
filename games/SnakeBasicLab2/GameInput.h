@@ -1,10 +1,11 @@
 #pragma once
-
+#include <cstdint>
 
 namespace GameInput
 {
 
-	enum class GameCommand
+	// not implemented yet 
+	enum class GameCommand : uint8_t 
 	{
 		None,
 		Up,

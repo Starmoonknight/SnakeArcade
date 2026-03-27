@@ -126,7 +126,7 @@ std::vector<std::string> GameGrid::ToLines(const GameConfig& cfg) const
 std::string GameGrid::ToString(const GameConfig& cfg) const
 {
     // found out about lambdas so trying one here
-    const auto estimatedCapacity = [this]() -> std::size_t
+    const auto estimatedCapacity = [this]() -> std::size_t      // the -> means this lambda will return a std::size_t variable. But Why use auto and not have the return ther like any other function? 
     {
         return static_cast<std::size_t>((m_height + 2) * (2 * m_width + 5));
     };

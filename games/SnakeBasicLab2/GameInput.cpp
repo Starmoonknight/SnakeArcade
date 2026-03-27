@@ -25,20 +25,25 @@ namespace GameInput
 			case 's': case '2': outChar = 's'; return true;	// down
 			case 'd': case '6': outChar = 'd'; return true;	// right
 			case 'q':			outChar = 'q'; return true;	// quit
-			case 'p':			outChar = 'p'; return true;	// pause
+			//case 'p':			outChar = 'p'; return true;	// pause
 			default:			return false; 
 			}
 		}
 
 		bool TryMapExtendedKey(int ext, char& outChar)
 		{
+			constexpr int kArrowUp = 72;
+			constexpr int kArrowLeft = 75;
+			constexpr int kArrowDown = 80;
+			constexpr int kArrowRight = 77;
+
 			// could also use Win32/_getch arrow mapping.
 			switch (ext)
 			{
-			case 72: outChar = 'w'; return true; // up
-			case 75: outChar = 'a'; return true; // left
-			case 80: outChar = 's'; return true; // down
-			case 77: outChar = 'd'; return true; // right
+			case kArrowUp:	  outChar = 'w'; return true; // arrow up
+			case kArrowLeft:  outChar = 'a'; return true; // arrow left
+			case kArrowDown:  outChar = 's'; return true; // arrow down
+			case kArrowRight: outChar = 'd'; return true; // arrow right
 			default: return false;
 			}
 		}

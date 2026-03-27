@@ -10,6 +10,10 @@
 
 
 struct Vec2;
+namespace GameRender
+{
+    struct BlockLayout;
+}
 
 
 struct GameConfig
@@ -126,11 +130,12 @@ private:
     void WrapPosition(Vec2& pos);
 
     // Render Helper
+    void RenderSubMenu(const GameRender::BlockLayout& helpLayout);
     void PaintSnake();
     void PaintFood(); 
 
     // Gameplay Helpers
-    bool IsCellBlockedForFood(const Vec2& pos);
+    bool IsCellBlockedForFood(const Vec2& pos) const;
     bool TrySpawnFoodAtEmpty(const Vec2& pos); 
     bool TrySpawnFoodAtRandom(); 
     void ClearFruit();

@@ -54,6 +54,12 @@ void Game::WrapPosition(Vec2& pos)
 
 // ----- Gameplay Helpers -----
 
+void Game::RenderSubMenu(const GameRender::BlockLayout& helpLayout)
+{
+    GameRender::RenderPressEnterPrompt(helpLayout);
+    MenuInput::ExpectEnterConfirmation();
+}
+
 void Game::PaintSnake()
 {
     bool isHead = true;
@@ -77,7 +83,7 @@ void Game::PaintFood()
 
 
 
-bool Game::IsCellBlockedForFood(const Vec2& pos)
+bool Game::IsCellBlockedForFood(const Vec2& pos) const
 {
     // return true if any blockers exist 
     if (!m_grid.InBounds(pos)) return true; 
@@ -298,16 +304,14 @@ void Game::RunPlayLoop()
 
         // update score at each succefull movement in next step / when fruit exists change to that 
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1)); 
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));      // no point checking millions of times per second 
     }
 
     GameRender::ShowCursor();
 
     if (m_playerDied)
     {
-        const GameRender::BlockLayout helpLayout = GameRender::RenderGameOver(m_score, m_highScore);
-        GameRender::RenderPressEnterPrompt(helpLayout);   // For now, since GameOver screen does not save anything yet
-        MenuInput::ExpectEnterConfirmation();
+        RenderSubMenu(GameRender::RenderGameOver(m_score, m_highScore));    // For now, since GameOver screen does not save anything yet
     }
 }
 
@@ -333,25 +337,43 @@ void Game::Run()
                 "Please enter a valid value number between 1-4\n"
             );
 
-            if (choice == '1') m_state = GameState::Playing;
-            else if (choice == '2' || choice == '3') m_state = GameState::SubMenu;
-            else if (choice == '4') m_state = GameState::Quit;
+            switch (choice)
+            {
+                case '1': 
+                    m_state = GameState::Playing;
+                    break;
+
+                case '2': 
+                case '3': 
+                    m_state = GameState::SubMenu;
+                    break;
+
+                case '4': 
+                    m_state = GameState::Quit;
+                    break;
+
+                default:
+                    std::cout << "Unexpected menu choice.\n";
+                    break;
+            }
 
             break;
         }
         case GameState::SubMenu:
         {
-            if (choice == '2')
+            switch (choice)
             {
-                const GameRender::BlockLayout helpLayout = GameRender::RenderHelpMenu();
-                GameRender::RenderPressEnterPrompt(helpLayout);
-                MenuInput::ExpectEnterConfirmation();
-            }
-            else if (choice == '3')
-            {
-                const GameRender::BlockLayout helpLayout = GameRender::RenderScoreBoard(m_highScore);
-                GameRender::RenderPressEnterPrompt(helpLayout);
-                MenuInput::ExpectEnterConfirmation();
+                case '2': 
+                    RenderSubMenu(GameRender::RenderHelpMenu());
+                    break; 
+
+                case '3': 
+                    RenderSubMenu(GameRender::RenderScoreBoard(m_highScore));
+                    break; 
+
+                default:
+                    std::cout << "Unexpected menu choice.\n";
+                    break;
             }
 
             m_state = GameState::MainMenu;
